@@ -12,7 +12,7 @@
 
 ## Quick Start
 
-1. Visit [https://bycrypt.web.app](https://bycrypt.web.app)
+1. Visit [https://bycrypt.pages.dev/](https://bycrypt.pages.dev/)
 2. Click **New** to create an encrypted QR code
 3. Choose your password type and enter your secret data
 4. Generate and download the QR code
