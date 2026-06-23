@@ -23,7 +23,6 @@
 
 ```
 ├── index.html          # Main entry point
-├── 404.html            # Required for SPA routing (copy of index.html)
 ├── css/                # Stylesheets
 ├── js/                 # Application logic
 │   ├── main.js         # Router setup
