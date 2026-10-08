@@ -60,8 +60,14 @@ class Batch {
 				const key = pw || secureRandomString(len)
 				const res = await makeLink({ scan, data, prefix: $id("b-prefix").value, keyMethod: "alphanumeric", key, params: {}, mode: $id("b-mode").value, encoding: "Base64url" })
 				const canvas = h("canvas", { width: 500, height: 600 })
-				drawQrCard(canvas, res.link, { label: label || "", labelSize: 30, labelColor: "#000000", bg: "#ffffff", qrbg: "#ffffff", qrfg: "#000000", level })
-				const card = h("div", { class: "bcard" }, canvas, $id("b-showpw").checked ? h("div", { class: "bpw" }, key) : null)
+				let qrFailed = false
+				try {
+					drawQrCard(canvas, res.link, { label: label || "", labelSize: 30, labelColor: "#000000", bg: "#ffffff", qrbg: "#ffffff", qrfg: "#000000", level })
+				} catch (e) {
+					qrFailed = true
+					drawQrError(canvas, e && e.message ? e.message : String(e))
+				}
+				const card = h("div", { class: "bcard" + (qrFailed ? " qr-failed" : "") }, canvas, $id("b-showpw").checked ? h("div", { class: "bpw" }, key) : null)
 				out.append(card)
 				this.rows.push({ label, link: res.link, key })
 			}

@@ -46,6 +46,29 @@ function drawQrCard(canvas, text, o) {
 	return qr
 }
 
+function drawQrError(canvas, message) {
+	const ctx = canvas.getContext("2d")
+	ctx.setTransform(1, 0, 0, 1, 0, 0)
+	ctx.clearRect(0, 0, canvas.width, canvas.height)
+	ctx.fillStyle = "#ffffff"
+	ctx.fillRect(0, 0, canvas.width, canvas.height)
+	ctx.textAlign = "center"
+	ctx.fillStyle = "#b00020"
+	ctx.font = "bold 22px Arial"
+	ctx.fillText("QR code could not be generated", canvas.width / 2, canvas.height / 2 - 30)
+	ctx.fillStyle = "#333333"
+	ctx.font = "15px Arial"
+	ctx.fillText("The link is too long to fit in a QR code.", canvas.width / 2, canvas.height / 2 + 6)
+	ctx.fillText("Everything still works - use the link text", canvas.width / 2, canvas.height / 2 + 30)
+	ctx.fillText("or the Copy button instead.", canvas.width / 2, canvas.height / 2 + 52)
+	if (message) {
+		ctx.fillStyle = "#666666"
+		ctx.font = "12px Arial"
+		ctx.fillText(message, canvas.width / 2, canvas.height / 2 + 84)
+	}
+	ctx.textAlign = "start"
+}
+
 function xmlEscape(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;") }
 
 /* Vector export: one path for all dark modules, quiet zone of 4 modules, optional label underneath. */

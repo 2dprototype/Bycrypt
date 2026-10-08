@@ -115,7 +115,11 @@ class New {
 		$id("c-generate").addEventListener("click", () => this.generate())
 		$id("c-copy").addEventListener("click", () => copyText(this.last.link, $id("c-copy")))
 		$id("c-png").addEventListener("click", () => $id("c-canvas").toBlob(b => saveAs(b, "qrcode-exported-bycrypt.png")))
-		$id("c-svg").addEventListener("click", () => saveAs(new Blob([qrSvgString(this.last.link, this.style())], { type: "image/svg+xml" }), "qrcode-exported-bycrypt.svg"))
+		$id("c-svg").addEventListener("click", () => {
+			if (this.qrError) { this.setError("The link is too long for a QR code, so there is no SVG to export. Use Copy or the link text instead."); return }
+			try { saveAs(new Blob([qrSvgString(this.last.link, this.style())], { type: "image/svg+xml" }), "qrcode-exported-bycrypt.svg") }
+			catch (e) { this.setError(e && e.message ? e.message : String(e)) }
+		})
 		$id("c-test").addEventListener("click", () => window.open(this.localUrl(), "_blank"))
 		$id("c-inspect").addEventListener("click", () => window.open("/inspect?l=" + encodeURIComponent(this.last.link), "_blank"))
 
@@ -268,13 +272,24 @@ class New {
 			this.last = res
 			const style = this.style()
 			const canvas = $id("c-canvas")
-			const qr = drawQrCard(canvas, res.link, style)
-			const levelNote = qr.usedLevel !== style.level ? " Correction level lowered from " + style.level + " to " + qr.usedLevel + " so the data fits." : ""
+			let qr = null, qrError = ""
+			try { qr = drawQrCard(canvas, res.link, style) }
+			catch (err) {
+				qrError = err && err.message ? err.message : String(err)
+				drawQrError(canvas, qrError)
+			}
+			this.qrError = qrError
 
 			$id("c-out").style.display = "block"
 			$id("c-link").textContent = res.link
 			const cap = QR_CAP[style.level], used = new TextEncoder().encode(res.link).length
-			$id("c-cap").textContent = "QR capacity: " + used + " of " + cap + " bytes (" + Math.round(used * 100 / cap) + "%)" + (used > cap * 0.7 ? " - dense codes scan less reliably." : "") + levelNote
+			if (qrError) {
+				$id("c-cap").textContent = "QR code not generated: the link is " + used +
+					" bytes and does not fit even at the lowest correction level. The link below still works - copy it or scan the text. Shorten the data or enable compression to get a QR code."
+			} else {
+				const levelNote = qr.usedLevel !== style.level ? " Correction level lowered from " + style.level + " to " + qr.usedLevel + " so the data fits." : ""
+				$id("c-cap").textContent = "QR capacity: " + used + " of " + cap + " bytes (" + Math.round(used * 100 / cap) + "%)" + (used > cap * 0.7 ? " - dense codes scan less reliably." : "") + levelNote
+			}
 			$id("c-compat").className = "notice " + (res.compatLegacy ? "ok" : "warn")
 			$id("c-compat").textContent = res.compatLegacy ? "Opens in every Bycrypt version." : "Needs this version of Bycrypt or newer."
 			const hash = CryptoJS.MD5(res.link).toString()
@@ -288,7 +303,7 @@ class New {
 		}
 		btnGen.disabled = false
 	}
-
+	
 	/* ---------- saved settings (appearance and options only, never keys or content) ---------- */
 	static get FIELDS() { return ["c-scan", "c-prefix", "c-key", "c-label", "c-lsize", "c-lcolor", "c-lx", "c-ly", "c-bg", "c-qrbg", "c-qrfg", "c-level"] }
 	saveConfig() {

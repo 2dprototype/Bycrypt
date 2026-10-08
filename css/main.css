@@ -183,3 +183,5 @@ canvas { box-shadow: 1px 2px 4px 1px rgb(32 33 36 / 28%); width: 80%; margin: 10
 .qvg-error { color: var(--bad); font-size: 0.85em; padding: 10px; text-align: center; }
 .qvg-foot { display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--line); padding-top: 12px; margin-top: 8px; }
 
+
+.bcard.qr-failed canvas { outline: 2px dashed #b00020; outline-offset: 4px; }
