@@ -1,5 +1,5 @@
 class Home {
-	constructor(){
+	constructor() {
 		this.element = $("#home")
 	}
 	hide() {

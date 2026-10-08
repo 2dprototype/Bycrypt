@@ -1,18 +1,28 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 	<head>
-		<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' >
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="theme-color" content="#00a1f5">
 		<title>Bycrypt</title>
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 		<link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,100..900;1,100..900&family=Ubuntu+Sans+Mono:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
 		<link rel="stylesheet" href="/css/main.css"/>
-		<link rel="stylesheet" href="/lib/highlight/atom-one-dark.css"/>
 		<link rel="stylesheet" href="/lib/patternlock/patternlock.css"/>
 		<link rel="icon" type="image/x-icon" href="/res/favicon.ico">
+		<link rel="manifest" href="/manifest.webmanifest">
 		<script src="/lib/svg-inject.min.js"></script>
 	</head>
-	<body>	
+	<body>
+		<nav class="topnav" aria-label="Main">
+			<a href="/" class="brand"><span data-icon="bycrypt" data-size="22"></span><span>Bycrypt</span></a>
+			<a href="/new"><span data-icon="plus" data-size="16"></span><span>Create</span></a>
+			<a href="/batch"><span data-icon="layers" data-size="16"></span><span>Batch</span></a>
+			<a href="/inspect"><span data-icon="search" data-size="16"></span><span>Inspect</span></a>
+		</nav>
+
+		<!-- HOME -->
 		<div style="display:none;" id="home">
 			<h3>Bycrypt!</h3>
 			<span>Bycrypt is a tool for generating encrypted QR codes.</span>
@@ -23,179 +33,150 @@
 			<span>First, create your encrypted barcode <a href="/new">here</a> using your own configuration. Then scan it using any QR code scanner. You will receive a URL. Open the URL and enter your password. Your secured data will appear seemingly out of nowhere.</span>
 			<br />
 			<br />
+			<b>What you can do</b>
+			<ul class="featlist">
+				<li><span data-icon="lock" data-size="16"></span> Lock text, links, accounts, Wi-Fi details, contact cards, link lists, markdown notes and small files.</li>
+				<li><span data-icon="star" data-size="16"></span> Unlock with a password, PIN, pattern, location or fingerprint, or with puzzles: icon sequences, picture hotspots, tile orders, melodies, rhythms, riddles and dial locks. Combine several for the best protection.</li>
+				<li><span data-icon="shield-check" data-size="16"></span> Legacy-compatible links open in every version of Bycrypt. Enhanced links add stronger encryption, compression, schedules, decoy keys and a privacy mode.</li>
+				<li><span data-icon="layers" data-size="16"></span> <a href="/batch">Batch</a> many QR codes into a printable sheet, and <a href="/inspect">inspect</a> any link to see what it is made of.</li>
+			</ul>
+			<br />
 			<span><i>Developed by <a href="https://github.com/2dprototype" target="_blank">2DPrototype</a>!</i></span>
 		</div>
+
+		<!-- UNLOCK -->
 		<div id="decrypter" style="display:none;">
 			<div class="container">
-				<p>
-					<input style="display:none;" type="text" placeholder="Password"/>
-				</p>
-				<p>
-					<input style="display:none;" type="number" placeholder="PIN"/>
-				</p>	
-				<p>
-					<input style="display:none;" type="button" value="Decrypt"/>
-				</p>
-				<p>
-					<input style="display:none;" type="Button" value="Get Location"/>
-				</p>	
-				<p>
-					<input style="display:none;" type="button" value="Scan Fingerprint"/>
-				</p>
-				<p>
-					<svg style="display:none;" class="patternlock" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-						<g class="lock-actives"></g>
-						<g class="lock-lines"></g>
-						<g class="lock-dots">
-							<circle cx="20" cy="20" r="2"/>
-							<circle cx="50" cy="20" r="2"/>
-							<circle cx="80" cy="20" r="2"/>
-
-							<circle cx="20" cy="50" r="2"/>
-							<circle cx="50" cy="50" r="2"/>
-							<circle cx="80" cy="50" r="2"/>
-
-							<circle cx="20" cy="80" r="2"/>
-							<circle cx="50" cy="80" r="2"/>
-							<circle cx="80" cy="80" r="2"/>
-						</g>
-					</svg>
-				</p>
-			</div>
-			<div class="output">
-				<pre class="text">
-					<code></code>
-				</pre>
+				<div class="dt-card card">
+					<div class="lock-head"><span data-icon="lock" data-size="26"></span><h2 class="dt-title">Locked data</h2></div>
+					<p class="dt-message" style="display:none"></p>
+					<details class="dt-hint-box" style="display:none"><summary>Show hint</summary><p class="dt-hint-text"></p></details>
+					<p class="dt-note notice warn" style="display:none"></p>
+					<div class="dt-method"></div>
+					<div class="dt-widget"></div>
+					<p class="dt-error" role="alert"></p>
+					<button type="button" class="btn primary dt-unlock">Unlock</button>
+					<p class="dt-attempts hint"></p>
+				</div>
+				<div class="output" style="display:none"></div>
 			</div>
 		</div>
-		<div class="new" style="display:none;" id="new">
-			<p>
-				<span>Scan Type</span>
-				<select>
-					<option value="raw">Text</option>
-					<option value="redirect">Redirect</option>
-					<option value="account">Account</option>
-					<option value="download">Download</option>
-				</select>	
-			</p>
-			<p>
-				<span>Prefix</span>
-				<select></select>	
-			</p>			
-			<p style="display:none;">
-				<span>Encoding</span>
-				<select>
-					<option value="Base64url">Base64url</option>
-					<option value="Base64">Base64</option>
-					<option value="Hex">Hex</option>
-				</select>
-			</p>
-			<p>
-				<span>Password Type</span>
-				<select>
-					<option value="alphanumeric">Alphanumeric</option>
-					<option value="pin">PIN</option>
-					<option value="pattern">Pattern</option>
-					<option value="location">Location Hash</option>
-					<option value="fingerprint">Fingerprint</option>
-				</select>	
-			</p>
-			<p>
-				<span>Password</span>
-				<input style="display:none;" type="button" value="Set Pattern"/>
-				<input type="text" placeholder="Password"/>
-				<input style="display:none;" type="number" placeholder="PIN"/>
-			</p>
-			<p id="fingerprint-btn" style="display:none;">
-				<span>Fingerprint Hasher</span>
-			    <button type="button">Scan</button>
-			</p>
-			<p id="map-btn" style="display:none;">
-				<span>Location Hasher</span>
-				<button>Get Hash</button>
-			</p>
-			<p style="justify-content: center;">
-				<div id="map" style="display:none;"></div>
-			</p>
-			<p style="justify-content: center;">
-				<svg style="display:none;" class="patternlock" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-					<g class="lock-actives"></g>
-					<g class="lock-lines"></g>
-					<g class="lock-dots">
-						<circle cx="20" cy="20" r="2"/>
-						<circle cx="50" cy="20" r="2"/>
-						<circle cx="80" cy="20" r="2"/>
 
-						<circle cx="20" cy="50" r="2"/>
-						<circle cx="50" cy="50" r="2"/>
-						<circle cx="80" cy="50" r="2"/>
+		<!-- CREATE -->
+		<div id="new" style="display:none;">
+			<section class="card">
+				<h3><span data-icon="file-text" data-size="18"></span> 1. Content</h3>
+				<label class="frow"><span>Type</span><select id="c-scan"></select></label>
+				<div id="c-content"></div>
+				<label class="frow"><span>Link prefix</span><select id="c-prefix"></select></label>
+				<select id="c-enc" style="display:none"><option value="Base64url">Base64url</option></select>
+			</section>
 
-						<circle cx="20" cy="80" r="2"/>
-						<circle cx="50" cy="80" r="2"/>
-						<circle cx="80" cy="80" r="2"/>
-					</g>
-				</svg>
-			</p>
-			<textarea spellcheck="false" placeholder="Drop your dusty data here..."></textarea>
-			<p>
-				<span>Label</span>
-				<input type="text" placeholder="label" spellcheck="false" value=""/>
-			</p>	
-			<p>
-				<span>Label Size</span>
-				<input type="number" value="30">
-			</p>	
-			<p>
-				<span>Label Color</span>
-				<input type="color" style="padding:0;" value="#000000" height="20"/>
-			</p>
-			<p>
-				<span>Label Shift X</span>
-				<input type="number" value="0">
-			</p>
-			<p>
-				<span>Label Shift Y</span>
-				<input type="number" value="0">
-			</p>	
-			<p>
-				<span>Custom Icon</span>
-				<input type="button" value="Choose"/>
-			</p>
-			<div id="icon-picker"></div>
-			<p>
-				<span>Background</span>
-				<input style="padding:0;" type="color" value="#ffffff">
-			</p>
-			<p>
-				<span>QR Background</span>
-				<input style="padding:0;" type="color" value="#ffffff">
-			</p>	
-			<p>
-				<span>QR Foreground</span>
-				<input style="padding:0;" type="color" value="#000000">
-			</p>
-			<p>
-				<span>Correct Level</span>
-				<select>
-					<option value="H">H</option>
-					<option value="M">M</option>
-					<option value="L">L</option>
-					<option value="Q">Q</option>
-				</select>
-			</p>
-			<p>
-				<span>Image</span>
-				<button>Generate</button>
-			</p>
-			<pre class="text"><code></code></pre>
-			<p style="justify-content: center;">
-				<canvas style="display:none;" height="600" width="500"></canvas>
-			</p>
-			<p>
-				<button style="display:none;">Copy Text</button>
-				<button style="display:none;">Download</button>
-			</p>
-			<pre class="text"><code></code></pre>
+			<section class="card">
+				<h3><span data-icon="key" data-size="18"></span> 2. Lock</h3>
+				<label class="frow"><span>Unlock with</span><select id="c-key"></select></label>
+				<p class="hint" id="c-key-desc"></p>
+				<div id="c-widget"></div>
+				<div id="c-strength" class="strength"></div>
+				<p class="hint" id="c-strength-note"></p>
+			</section>
+
+			<section class="card">
+				<h3><span data-icon="shield" data-size="18"></span> 3. Security mode</h3>
+				<label class="frow"><span>Mode</span>
+					<select id="c-mode"><option value="legacy">Legacy-compatible (opens everywhere)</option><option value="enhanced">Enhanced (stronger, newer versions only)</option></select>
+				</label>
+				<div id="c-mode-note" class="notice ok"></div>
+				<div id="c-enh" style="display:none">
+					<label class="inline"><input type="checkbox" id="c-compress"> Compress (smaller QR code)</label>
+					<label class="inline"><input type="checkbox" id="c-fragment"> Privacy mode: keep the encrypted data out of server logs (#fragment)</label>
+					<label class="frow"><span>Not before</span><input type="datetime-local" id="c-nb"></label>
+					<label class="frow"><span>Expires</span><input type="datetime-local" id="c-ex"></label>
+					<p class="hint">Dates are checked on the viewer's device after unlocking, so they are a polite barrier, not a hard one.</p>
+					<label class="inline"><input type="checkbox" id="c-decoy-on"> Decoy key</label>
+					<p class="hint" id="c-decoy-hint"></p>
+					<div id="c-decoy-box" style="display:none">
+						<textarea id="c-decoy-data" rows="3" placeholder="Harmless content shown for the decoy key" aria-label="Decoy content"></textarea>
+						<p class="hint">Enter the decoy key below (same method as above, using the same picture/questions):</p>
+						<div id="c-decoy-widget"></div>
+					</div>
+				</div>
+				<h4>Unlock page</h4>
+				<label class="frow"><span>Title</span><input type="text" id="c-title" maxlength="60" placeholder="Locked data"></label>
+				<label class="frow"><span>Message</span><input type="text" id="c-message" maxlength="140" placeholder="Shown above the lock"></label>
+				<label class="frow"><span>Hint</span><input type="text" id="c-hint" maxlength="100" placeholder="Visible to everyone, never put the key here"></label>
+				<label class="frow"><span>Max attempts</span><input type="number" id="c-attempts" min="0" max="99" placeholder="0 = unlimited"></label>
+				<p class="hint">Attempt limits are counted on the viewer's device and can be reset by clearing site data.</p>
+			</section>
+
+			<section class="card">
+				<h3><span data-icon="image" data-size="18"></span> 4. Appearance</h3>
+				<label class="frow"><span>Label</span><input type="text" id="c-label" value="Bycrypt"></label>
+				<label class="frow"><span>Label Size</span><input type="number" id="c-lsize" value="30"></label>
+				<label class="frow"><span>Label Color</span><input type="color" id="c-lcolor" value="#000000"></label>
+				<label class="frow"><span>Label Shift X</span><input type="number" id="c-lx" value="0"></label>
+				<label class="frow"><span>Label Shift Y</span><input type="number" id="c-ly" value="0"></label>
+				<label class="frow"><span>Custom Icon</span><button type="button" class="btn" id="c-custom-icon">Choose</button></label>
+				<div id="icon-picker"></div>
+				<label class="frow"><span>Background</span><input type="color" id="c-bg" value="#ffffff"></label>
+				<label class="frow"><span>QR Background</span><input type="color" id="c-qrbg" value="#ffffff"></label>
+				<label class="frow"><span>QR Foreground</span><input type="color" id="c-qrfg" value="#000000"></label>
+				<label class="frow"><span>Correct Level</span>
+					<select id="c-level"><option value="H">H</option><option value="M">M</option><option value="L">L</option><option value="Q">Q</option></select>
+				</label>
+			</section>
+
+			<section class="card gen">
+				<button type="button" class="btn primary big" id="c-generate"><span data-icon="play" data-size="16"></span><span>Generate</span></button>
+				<p class="error" id="c-error" role="alert" style="display:none"></p>
+				<div id="c-out" style="display:none">
+					<div id="c-compat" class="notice ok"></div>
+					<pre class="text"><code id="c-link"></code></pre>
+					<p class="hint" id="c-cap"></p>
+					<div class="canvas-wrap"><canvas id="c-canvas" height="600" width="500"></canvas></div>
+					<div class="kw-row wrap">
+						<button type="button" class="btn" id="c-copy"><span data-icon="copy" data-size="16"></span><span>Copy link</span></button>
+						<button type="button" class="btn" id="c-png"><span data-icon="download" data-size="16"></span><span>PNG</span></button>
+						<button type="button" class="btn" id="c-svg"><span data-icon="download" data-size="16"></span><span>SVG</span></button>
+						<button type="button" class="btn" id="c-test"><span data-icon="unlock" data-size="16"></span><span>Test unlock</span></button>
+						<button type="button" class="btn" id="c-inspect"><span data-icon="search" data-size="16"></span><span>Inspect</span></button>
+					</div>
+					<pre class="text"><code id="c-log"></code></pre>
+				</div>
+			</section>
+		</div>
+
+		<!-- BATCH -->
+		<div id="batch" style="display:none;">
+			<section class="card noprint">
+				<h3><span data-icon="layers" data-size="18"></span> Batch generator</h3>
+				<p class="hint">One QR code per line: <code>label,data,password</code>. The password is optional and will be generated if left empty. Use quotes around data that contains commas.</p>
+				<textarea id="b-rows" rows="8" placeholder="Room 1,https://example.com/a,&#10;Room 2,https://example.com/b,my-own-password" aria-label="Batch lines"></textarea>
+				<label class="frow"><span>Type</span><select id="b-scan"></select></label>
+				<label class="frow"><span>Link prefix</span><select id="b-prefix"></select></label>
+				<label class="frow"><span>Mode</span><select id="b-mode"><option value="legacy">Legacy-compatible</option><option value="enhanced">Enhanced</option></select></label>
+				<label class="frow"><span>Generated password length</span><input type="number" id="b-len" value="12" min="6" max="64"></label>
+				<label class="frow"><span>Correct Level</span><select id="b-level"><option value="M">M</option><option value="H">H</option><option value="L">L</option><option value="Q">Q</option></select></label>
+				<label class="inline"><input type="checkbox" id="b-showpw" checked> Print the password under each code</label>
+				<button type="button" class="btn primary big" id="b-generate"><span data-icon="play" data-size="16"></span><span>Generate</span></button>
+				<p class="error" id="b-error" role="alert"></p>
+				<div class="kw-row wrap" id="b-actions" style="display:none">
+					<button type="button" class="btn" id="b-print"><span data-icon="printer" data-size="16"></span><span>Print sheet</span></button>
+					<button type="button" class="btn" id="b-csv"><span data-icon="download" data-size="16"></span><span>CSV (labels, links, passwords)</span></button>
+				</div>
+			</section>
+			<div id="b-out" class="bgrid"></div>
+		</div>
+
+		<!-- INSPECT -->
+		<div id="inspect" style="display:none;">
+			<section class="card">
+				<h3><span data-icon="search" data-size="18"></span> Link inspector</h3>
+				<p class="hint">Paste a Bycrypt link to see what it is made of. It is not decrypted and nothing leaves your browser.</p>
+				<textarea id="i-input" rows="3" placeholder="https://bycrypt.web.app/x/..." aria-label="Link"></textarea>
+				<button type="button" class="btn primary" id="i-go"><span data-icon="search" data-size="16"></span><span>Inspect</span></button>
+				<div id="i-out"></div>
+			</section>
 		</div>
 	</body>
 	<!-- libs -->
@@ -207,12 +188,23 @@
 	<script type="text/javascript" src="/lib/FileSaver.min.js"></script>
 	<script type="text/javascript" src="/lib/qrcode.min.js"></script>
 	<script type="text/javascript" src="/lib/patternlock/patternlock.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
+	<!-- map for the Location method (optional: everything else works without it, e.g. offline) -->
+	<script src="https://cdn.jsdelivr.net/npm/ol@10.3.1/dist/ol.js"></script>
 	<!-- scripts -->
+	<script type="text/javascript" src="/js/config.js"></script>
 	<script type="text/javascript" src="/js/func.js"></script>
 	<script type="text/javascript" src="/js/make.js"></script>
+	<script type="text/javascript" src="/js/codes.js"></script>
+	<script type="text/javascript" src="/js/crypto2.js"></script>
+	<script type="text/javascript" src="/js/scan.js"></script>
+	<script type="text/javascript" src="/js/icons.js"></script>
+	<script type="text/javascript" src="/js/scenes.js"></script>
+	<script type="text/javascript" src="/js/qrdraw.js"></script>
+	<script type="text/javascript" src="/js/keys.js"></script>
 	<script type="text/javascript" src="/js/Home.js"></script>
 	<script type="text/javascript" src="/js/Decrypter.js"></script>
 	<script type="text/javascript" src="/js/New.js"></script>
+	<script type="text/javascript" src="/js/Batch.js"></script>
+	<script type="text/javascript" src="/js/Inspect.js"></script>
 	<script type="text/javascript" src="/js/main.js"></script>
-</html>							
+</html>
