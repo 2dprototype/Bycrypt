@@ -290,12 +290,12 @@ defKey({
 	desc: "Tap 3 or more secret spots on a picture. Taps snap to a grid and tolerate small misses.",
 	build(ctx) {
 		const create = ctx.mode === "create"
-		const P = { img: String(ctx.params.img || "1"), g: parseInt(ctx.params.g) || 8 }
+		const P = { img: String(ctx.params.img || "default_qvg"), g: parseInt(ctx.params.g) || 8 }
 		let pts = [], gridOn = false
 		const scene = h("div", { class: "hs-scene" })
 		const over = h("div", { class: "hs-over", role: "img", "aria-label": "Picture. Tap your secret spots." })
 		const stage = h("div", { class: "hs-stage" }, scene, over)
-		const drawScene = () => { scene.innerHTML = sceneSvg(P.img, 480); const s = scene.firstChild; s.removeAttribute("width"); s.removeAttribute("height") }
+		const drawScene = () => { scene.innerHTML = sceneSvg(P.img, 480); const s = scene.firstChild; if (s) { s.removeAttribute("width"); s.removeAttribute("height") } }
 		const drawOver = () => {
 			over.innerHTML = ""
 			over.classList.toggle("grid-on", gridOn)
@@ -310,14 +310,24 @@ defKey({
 		})
 		const root = h("div", { class: "kw" })
 		if (create) {
-			const sceneSel = h("select", { "aria-label": "Picture" }), gridSel = h("select", { "aria-label": "Grid size" })
-			for (let i = 1; i <= SCENE_COUNT; i++) sceneSel.append(h("option", { value: i, selected: String(i) === P.img }, "Picture " + i))
+			const gridSel = h("select", { "aria-label": "Grid size" })
 			for (const g of [6, 8, 10, 12]) gridSel.append(h("option", { value: g, selected: g === P.g }, g + " x " + g + " grid"))
 			const show = h("input", { type: "checkbox", id: "hs-grid-" + Math.random().toString(36).slice(2) })
 			show.addEventListener("change", () => { gridOn = show.checked; drawOver() })
-			sceneSel.addEventListener("change", () => { P.img = sceneSel.value; pts = []; drawScene(); drawOver(); ctx.onChange() })
 			gridSel.addEventListener("change", () => { P.g = parseInt(gridSel.value); pts = []; drawOver(); ctx.onChange() })
-			root.append(h("div", { class: "kw-row" }, sceneSel, gridSel, h("label", { class: "inline" }, show, "Show grid")))
+			const qvgBtn = btn("Change Image", "palette", () => {
+				openQvgModal({
+					currentPayload: P.img,
+					onApply(newPayload) {
+						P.img = "qvg:" + newPayload
+						pts = []
+						drawScene()
+						drawOver()
+						ctx.onChange()
+					}
+				})
+			})
+			root.append(h("div", { class: "kw-row" }, qvgBtn, gridSel, h("label", { class: "inline" }, show, "Show grid")))
 		}
 		root.append(stage, h("div", { class: "kw-row" }, btn("Undo", "backspace", () => { pts.pop(); drawOver(); ctx.onChange() }), btn("Clear", "x", () => { pts = []; drawOver(); ctx.onChange() })))
 		drawScene(); drawOver()
@@ -395,7 +405,7 @@ defKey({
 			el: root,
 			async collect() {
 				if (!path.length) throw new Error("Draw the pattern first.")
-				if (create && path.length < 4) throw new Error("Connect at least 4 dots.")
+				// if (create && path.length < 4) throw new Error("Connect at least 4 dots.")
 				return ["p" + P.n + ":" + path.join(".")]
 			},
 			bits: () => Math.round(log2perm(P.n * P.n, path.length)), reset() { path = []; render() }, getParams: () => ({ n: P.n })
@@ -408,11 +418,17 @@ defKey({
 	desc: "A picture is cut into tiles and shuffled. Arrange them into your secret order (swap by tapping two tiles).",
 	build(ctx) {
 		const create = ctx.mode === "create"
-		const P = { img: String(ctx.params.img || "1"), k: parseInt(ctx.params.k) === 4 ? 4 : 3, s: String(ctx.params.s || (create ? 1 + (crypto.getRandomValues(new Uint32Array(1))[0] % 999999) : 1)) }
+		const P = { img: String(ctx.params.img || "default_qvg"), k: parseInt(ctx.params.k) === 4 ? 4 : 3, s: String(ctx.params.s || "0") }
 		let start, arr, sel = null
 		const board = h("div", { class: "tiles", role: "group", "aria-label": "Tile board" })
 		let uri = sceneUri(P.img)
-		const reset = () => { start = shuffleSeeded(P.k * P.k, P.s); arr = start.slice(); sel = null; render() }
+		const reset = () => {
+			const n = P.k * P.k
+			start = (P.s === "0" || !P.s) ? Array.from({ length: n }, (_, i) => i) : shuffleSeeded(n, P.s)
+			arr = start.slice()
+			sel = null
+			render()
+		}
 		function render() {
 			board.innerHTML = ""
 			board.style.setProperty("--k", P.k)
@@ -432,12 +448,31 @@ defKey({
 		}
 		const root = h("div", { class: "kw" })
 		if (create) {
-			const sceneSel = h("select", { "aria-label": "Picture" }), kSel = h("select", { "aria-label": "Board size" })
-			for (let i = 1; i <= SCENE_COUNT; i++) sceneSel.append(h("option", { value: i, selected: String(i) === P.img }, "Picture " + i))
+			const kSel = h("select", { "aria-label": "Board size" })
 			for (const k of [3, 4]) kSel.append(h("option", { value: k, selected: k === P.k }, k + " x " + k + " tiles"))
-			sceneSel.addEventListener("change", () => { P.img = sceneSel.value; uri = sceneUri(P.img); reset(); ctx.onChange() })
 			kSel.addEventListener("change", () => { P.k = parseInt(kSel.value); reset(); ctx.onChange() })
-			root.append(h("div", { class: "kw-row" }, sceneSel, kSel, btn("New shuffle", "refresh", () => { P.s = String(1 + (crypto.getRandomValues(new Uint32Array(1))[0] % 999999)); reset(); ctx.onChange() })))
+			const qvgBtn = btn("Change Image", "palette", () => {
+				openQvgModal({
+					currentPayload: P.img,
+					onApply(newPayload) {
+						P.img = "qvg:" + newPayload
+						uri = sceneUri(P.img)
+						reset()
+						ctx.onChange()
+					}
+				})
+			})
+			const shuffleBtn = btn("Shuffle", "refresh", () => {
+				P.s = String(1 + (crypto.getRandomValues(new Uint32Array(1))[0] % 999999))
+				reset()
+				ctx.onChange()
+			})
+			const unshuffleBtn = btn("Unshuffle", "x", () => {
+				P.s = "0"
+				reset()
+				ctx.onChange()
+			})
+			root.append(h("div", { class: "kw-row" }, qvgBtn, kSel, shuffleBtn, unshuffleBtn))
 		}
 		root.append(board, h("div", { class: "kw-row" }, btn("Reset", "refresh", () => { reset(); ctx.onChange() })))
 		reset()
@@ -445,11 +480,9 @@ defKey({
 		return {
 			el: root,
 			async collect() {
-				if (create && moved() < Math.ceil(P.k * P.k / 2)) throw new Error("Rearrange more tiles: your secret order must differ from the shuffled start in at least " + Math.ceil(P.k * P.k / 2) + " places.")
-				if (!create && moved() === 0) throw new Error("Arrange the tiles first.")
 				return ["t" + P.k + ":" + arr.join(".")]
 			},
-			bits: () => Math.round(log2fact(P.k * P.k) * moved() / (P.k * P.k)), reset, getParams: () => ({ img: P.img, k: P.k, s: P.s })
+			bits: () => Math.round(log2fact(P.k * P.k) * Math.max(1, moved()) / (P.k * P.k)), reset, getParams: () => ({ img: P.img, k: P.k, s: P.s })
 		}
 	}
 })

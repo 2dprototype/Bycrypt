@@ -27,7 +27,16 @@ function inspectLink(raw) {
 	}
 	R("Effective result", "opens as: " + info.scan + ", unlocked with: " + (info.key ? (KeyMethods[info.key] ? KeyMethods[info.key].label : info.key) : "unknown") + ", encryption: " + info.suite)
 	const keys = Object.keys(meta.params)
-	if (keys.length) R("Public parameters", keys.map(k => k + " = " + meta.params[k]).join("\n"))
+	if (keys.length) {
+		const paramLines = keys.map(k => {
+			if (k === "img" && typeof isQvgImg === "function" && isQvgImg(meta.params[k])) {
+				const p = qvgPayloadOf(meta.params[k])
+				return k + " = QVG Vector Image (" + p.length + " chars)"
+			}
+			return k + " = " + meta.params[k]
+		})
+		R("Public parameters", paramLines.join("\n"))
+	}
 	if (info.suite !== "legacy" && payload) {
 		try {
 			const b = B64.dec(payload)

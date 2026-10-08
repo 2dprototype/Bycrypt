@@ -1,9 +1,53 @@
 /*
- * Deterministic procedural pictures for the hotspot and tile puzzles.
- * A link cannot carry an image, so the picture is a scene id (param "img") that every device draws identically
- * from integer seeds. Scene ids 1..SCENE_COUNT are FROZEN - changing the drawing would break existing links.
+ * Vector graphics for the hotspot and tile puzzles.
+ * Uses QVG (QR Vector Graphics) format.
  */
-const SCENE_COUNT = 8
+
+const DEFAULT_QVG_SOURCE = `grid 100 100
+bg #0d1b2a
+f #1b263b
+s #00a1f5
+w 2
+rr 10 10 80 80 8
+f #415e7b
+s -
+rr 15 15 32 32 4
+f #e0a96d
+star 31 31 10 5 5 0
+f #2a475e
+rr 53 15 32 32 4
+f #e63946
+c 69 31 10
+f #223a4e
+rr 15 53 32 32 4
+f #06d6a0
+p 31 58 41 77 21 77
+f #1a3344
+rr 53 53 32 32 4
+f #118ab2
+ring 69 69 11 5
+f #0d1b2a
+s #ffd166
+w 2
+c 50 50 14
+f #ffd166
+s -
+star 50 50 8 4 4 45`
+
+const DEFAULT_QVG_PAYLOAD = "J2HU8CRML1NL$JJSQDAEFN2HVV4FR1N1YS9P*ZCT.SPT834M4:5ARRAF5..F1V3BN59J2K228HLHIO.PL9H0X91EN86N5SM1.S2:ZY-H1TMTHP2K*5U86V3AF231N5TQ02X75-J-ZT1CBM9B7NYG8A-85T8SJTAM*3CBBX034QN2A16.6WF8PZTB7N.J0"
+
+function isQvgImg(id) {
+	if (!id) return false
+	const s = String(id).trim()
+	return s === "default_qvg" || /^qvg:/i.test(s) || (s.length > 20 && /^(?:QVG:)?[0-9A-Z\-.$*:]+$/.test(s))
+}
+
+function qvgPayloadOf(id) {
+	if (!id || id === "default_qvg" || !isQvgImg(id)) return DEFAULT_QVG_PAYLOAD
+	const s = String(id).trim()
+	if (/^qvg:/i.test(s)) return s.slice(4).trim()
+	return s
+}
 
 function mulberry32(seed) {
 	let a = seed | 0
@@ -17,32 +61,22 @@ function mulberry32(seed) {
 
 function sceneSvg(id, size) {
 	size = size || 480
-	const n = Math.min(SCENE_COUNT, Math.max(1, parseInt(id) || 1))
-	const rnd = mulberry32(4000 + n * 7919)
-	const ri = (lo, hi) => Math.round(lo + rnd() * (hi - lo))
-	const hue = ri(0, 359)
-	const S = 480
-	let g = '<defs><linearGradient id="bg' + n + '" x1="0" y1="0" x2="1" y2="1">' +
-		'<stop offset="0" stop-color="hsl(' + hue + ',55%,32%)"/><stop offset="1" stop-color="hsl(' + ((hue + 70) % 360) + ',60%,62%)"/></linearGradient></defs>' +
-		'<rect width="' + S + '" height="' + S + '" fill="url(#bg' + n + ')"/>'
-	const count = 26
-	for (let i = 0; i < count; i++) {
-		const kind = ri(0, 3)
-		const h = (hue + ri(0, 5) * 60 + ri(0, 30)) % 360
-		const col = "hsl(" + h + "," + ri(45, 90) + "%," + ri(35, 78) + "%)"
-		const x = ri(10, S - 10), y = ri(10, S - 10), r = ri(22, 70)
-		const op = (0.72 + ri(0, 25) / 100).toFixed(2)
-		if (kind === 0) g += '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="' + col + '" opacity="' + op + '"/>'
-		else if (kind === 1) g += '<rect x="' + (x - r) + '" y="' + (y - r) + '" width="' + (r * 2) + '" height="' + (ri(20, 70) * 2) + '" rx="' + ri(0, 14) + '" fill="' + col + '" opacity="' + op + '"/>'
-		else if (kind === 2) g += '<polygon points="' + x + "," + (y - r) + " " + (x + r) + "," + (y + r) + " " + (x - r) + "," + (y + r) + '" fill="' + col + '" opacity="' + op + '"/>'
-		else g += '<ellipse cx="' + x + '" cy="' + y + '" rx="' + r + '" ry="' + Math.round(r / 2) + '" transform="rotate(' + ri(0, 170) + " " + x + " " + y + ')" fill="' + col + '" opacity="' + op + '"/>'
+	try {
+		const pay = qvgPayloadOf(id)
+		let svg = QVG.toSVG(pay)
+		svg = svg.replace(/<svg\b([^>]*)>/i, (m, attrs) => {
+			let a = attrs.replace(/\bwidth="[^"]*"/gi, '').replace(/\bheight="[^"]*"/gi, '')
+			return '<svg ' + a.trim() + ' width="' + size + '" height="' + size + '" preserveAspectRatio="none">'
+		})
+		return svg
+	} catch (e) {
+		console.warn("Failed to render QVG image:", e)
+		try {
+			return QVG.toSVG(DEFAULT_QVG_PAYLOAD)
+		} catch (err) {
+			return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="' + size + '" height="' + size + '"><rect width="100" height="100" fill="#0d1b2a"/></svg>'
+		}
 	}
-	// a few high-contrast landmarks so every region of the picture is distinguishable
-	for (let i = 0; i < 6; i++) {
-		const x = ri(30, S - 30), y = ri(30, S - 30)
-		g += '<circle cx="' + x + '" cy="' + y + '" r="' + ri(5, 12) + '" fill="#fff" opacity="0.9"/><circle cx="' + x + '" cy="' + y + '" r="' + ri(2, 4) + '" fill="#111"/>'
-	}
-	return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + S + " " + S + '" width="' + size + '" height="' + size + '" preserveAspectRatio="none">' + g + "</svg>"
 }
 
 function sceneUri(id) {
